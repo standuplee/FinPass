@@ -13,7 +13,9 @@ data/processed/
 ├── consumers/
 │   └── segment_aggregates.parquet
 ├── process-events/
-│   └── bpi_events.parquet
+│   ├── events.jsonl
+│   ├── case_features.jsonl
+│   └── transition_counts.jsonl
 ├── intents/
 │   └── banking77/{train,test}.parquet
 └── rag-documents/
@@ -66,6 +68,10 @@ RAG 허용 조건:
 | `accepted`, `selected` | 동명 원본 필드 |
 
 그 후 Synthetic Generator가 Process 패턴을 FinPass `JourneyEvent`로 생성한다. 원본 Case ID를 FinPass 고객 ID로 사용하지 않는다.
+
+초기 정규화 출력은 추가 Runtime 없이 검증 가능한 JSONL을 사용한다. 학습 및 대규모 집계 단계에서 동일 계약을 Parquet으로 변환한다.
+
+재작업 Feature는 동일 Activity 이름의 단순 반복으로 계산하지 않는다. 정상 Workflow lifecycle인 `schedule → start → complete`를 재작업으로 오인하지 않도록 동일 Activity의 `complete`가 두 번 이상 발생하고, 해당 Activity가 검증·미완료·서류보완 관련 Allowlist에 포함될 때만 `has_rework`로 표시한다. 여러 Offer 생성은 별도 상품 제안일 수 있어 재작업 판정에서 제외한다.
 
 ## Banking77
 
