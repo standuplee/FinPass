@@ -1,0 +1,15 @@
+schema_version: "1.0"
+product_code: SOLE_PROPRIETOR_LOAN
+name: 개인사업자 신용대출
+required_checks:
+  - identity_verification
+  - limit_check
+  - income_verification
+required_documents:
+  primary:
+    - income_verification_result
+  alternatives:
+    - income_statement_certificate
+    - vat_tax_base_certificate
+    - business_account_statement
+disclaimer: 데모용 Mock 상품정보이며 실제 금융상품 조건이 아니다.

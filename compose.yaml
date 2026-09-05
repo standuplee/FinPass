@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: finpass
+      POSTGRES_USER: finpass
+      POSTGRES_PASSWORD: finpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - finpass-postgres:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finpass -d finpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  finpass-postgres:

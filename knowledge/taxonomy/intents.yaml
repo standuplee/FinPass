@@ -1,0 +1,13 @@
+schema_version: "1.0"
+intents:
+  - code: VERIFY_SOURCE_OF_FUNDS
+    banking77_labels: [verify_source_of_funds]
+    journey_steps: [INCOME_VERIFICATION]
+  - code: UNABLE_TO_VERIFY_IDENTITY
+    banking77_labels: [verify_my_identity]
+    journey_steps: [IDENTITY_VERIFICATION]
+    review_required: true
+  - code: DOCUMENT_SUBMISSION_HELP
+    banking77_labels: []
+    journey_steps: [DOCUMENT_SUBMISSION]
+    internal_only: true

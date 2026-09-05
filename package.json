@@ -1,0 +1,11 @@
+{
+  "name": "finpass",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "dev:web": "pnpm --filter @finpass/web dev",
+    "build:web": "pnpm --filter @finpass/web build",
+    "lint:web": "pnpm --filter @finpass/web lint",
+    "typecheck:web": "pnpm --filter @finpass/web typecheck"
+  }
+}

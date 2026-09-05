@@ -1,0 +1,28 @@
+profile_version: "1.0"
+profiled_at: "2026-09-05"
+profile_command: make profile-data
+profile_output: data/processed/profiles/dataset-profile.json
+datasets:
+  aihub_consulting:
+    path: data/raw/aihub-consulting
+    archive_count: 12
+    compressed_bytes: 319957349
+    contained_json_files: 155262
+    invalid_json: 0
+    license_review: required
+  aihub_financial_product:
+    path: data/raw/aihub-financial-product
+    archive_count: 40
+    compressed_bytes: 82706975
+    contained_files: 29003
+    invalid_json: 0
+    license_review: required
+  bpi2017:
+    path: data/raw/bpi2017/bpi_2017_cleaned.csv
+    sha256: 15a486bbb12dcc2f27e890887275359698193bed55fe3ae0bc814fcd6cd6dca5
+    rows: 1202267
+    cases: 31509
+    activities: 26
+    missing_timestamps: 0
+  banking77:
+    manifest: data/manifests/banking77.yaml

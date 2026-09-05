@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: FinPass AI API
+  version: 0.1.0
+  description: Phase 0 contract draft. FastAPI runtime schema becomes authoritative in Phase 1.
+servers:
+  - url: http://localhost:8000
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        "200":
+          description: API health
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/contracts/event-catalog:
+    get:
+      operationId: getEventCatalog
+      responses:
+        "200":
+          description: Supported event and journey step values
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [event_types, journey_steps]
+                properties:
+                  event_types:
+                    type: array
+                    items: { type: string }
+                  journey_steps:
+                    type: array
+                    items: { type: string }
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status, environment]
+      properties:
+        status:
+          type: string
+          const: ok
+        environment:
+          type: string
+    JourneyEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - event_id
+        - customer_id
+        - journey_id
+        - session_id
+        - channel
+        - event_type
+        - product_type
+        - journey_step
+        - status
+        - retry_count
+        - occurred_at
+      properties:
+        schema_version: { type: string, default: "1.0" }
+        event_id: { type: string, format: uuid }
+        customer_id: { type: string, format: uuid }
+        journey_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        channel:
+          type: string
+          enum: [CUSTOMER_APP, CHATBOT, CALL_CENTER, BRANCH]
+        event_type: { type: string }
+        product_type:
+          type: string
+          enum: [SOLE_PROPRIETOR_LOAN]
+        journey_step: { type: string }
+        status:
+          type: string
+          enum: [STARTED, SUCCEEDED, FAILED, REQUESTED, COMPLETED]
+        error_code: { type: [string, "null"] }
+        retry_count: { type: integer, minimum: 0 }
+        occurred_at: { type: string, format: date-time }
+        duration_ms: { type: [integer, "null"], minimum: 0 }
+        attributes: { type: object }

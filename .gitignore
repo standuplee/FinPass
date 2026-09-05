@@ -1,0 +1,35 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# JavaScript
+node_modules/
+.next/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+
+# Data and model artifacts
+data/raw/**
+data/processed/**
+data/synthetic/**
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/synthetic/.gitkeep
+!data/synthetic/fixtures/
+!data/synthetic/fixtures/**
+*.parquet
+*.pickle
+*.pkl
+*.onnx
+*.bin
+
+# Local infrastructure
+.postgres/

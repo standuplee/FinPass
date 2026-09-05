@@ -1,0 +1,30 @@
+dataset: mteb/banking77
+revision: 18072d2
+source_url: https://huggingface.co/datasets/mteb/banking77
+license: MIT
+language: en
+task: intent_classification
+format: parquet
+expected_schema:
+  text: string
+  label: int64
+  label_text: string
+expected_splits:
+  train: 10003
+  test: 3080
+expected_label_count: 77
+files:
+  - path: data/raw/banking77/train.jsonl
+    rows: 10003
+    sha256: d411780d8c0e18e166f5664c6cfe90dc9de399d722aa7cde282e31a771323ea7
+  - path: data/raw/banking77/test.jsonl
+    rows: 3080
+    sha256: fb1b0043ded745b8767687084786e6dd0a5f0ce03243b6131992a1c7ae2c2595
+usage:
+  - intent classification baseline
+  - FinPass intent taxonomy mapping
+  - retrieval query intent enrichment
+limitations:
+  - English online banking queries; not representative of Korean consultations
+  - Most labels are outside the sole proprietor loan MVP
+  - Must not be treated as the ground truth for Korean financial procedures
