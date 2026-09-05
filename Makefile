@@ -1,4 +1,4 @@
-.PHONY: api-dev api-test api-lint web-dev web-check db-up db-down validate-fixtures banking77 profile-data
+.PHONY: api-dev api-test api-lint web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations test-pipelines
 
 api-dev:
 	cd apps/api && uv run uvicorn app.main:app --reload
@@ -29,3 +29,9 @@ banking77:
 
 profile-data:
 	python3 pipelines/inspect/local_datasets.py
+
+normalize-consultations:
+	python3 -m pipelines.normalize.consultations
+
+test-pipelines:
+	python3 -m unittest pipelines.normalize.test_pii

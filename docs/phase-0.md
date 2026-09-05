@@ -19,6 +19,7 @@ Phase 0는 제품 기능을 확장하기 전에 Web/API 실행 기반, 데이터
 | OpenAPI 초안 | `docs/api/openapi.yaml` | 완료 |
 | Dataset Mapping/Provenance 계획 | `docs/dataset-mapping.md` | 완료 |
 | Banking77 고정 리비전 Loader | `pipelines/inspect/banking77.py` | 완료 |
+| 상담 정규화·구조화 PII 마스킹 | `pipelines/normalize/consultations.py` | 완료 |
 | 실제 데이터 Profile | `docs/datasets/profile-2026-09-05.md` | 완료 |
 
 현재 실행 환경에는 Node.js, pnpm, uv, Docker 및 Python 3.12가 설치되어 있지 않아 런타임 테스트와 Lockfile 생성은 보류 상태다. JSON/YAML 문법과 저장소 정적 구조는 검증했다. 요구 도구가 준비되면 아래 명령으로 Release Gate를 확인한다.
