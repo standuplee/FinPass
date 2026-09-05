@@ -1,4 +1,4 @@
-.PHONY: api-dev api-test api-lint web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
+.PHONY: api-dev api-test api-lint api-migrate web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
 
 api-dev:
 	cd apps/api && uv run uvicorn app.main:app --reload
@@ -8,6 +8,9 @@ api-test:
 
 api-lint:
 	cd apps/api && uv run ruff check .
+
+api-migrate:
+	cd apps/api && uv run alembic upgrade head
 
 web-dev:
 	pnpm dev:web

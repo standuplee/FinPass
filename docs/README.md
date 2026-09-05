@@ -10,6 +10,7 @@ FinPass AI는 금융소비자가 앱, 챗봇, 콜센터, 영업점 사이를 이
 | [MVP 아키텍처](./architecture.md) | 시스템 구성, 데이터 모델, 주요 흐름과 기술 의사결정 정의 |
 | [개발 계획](./development-plan.md) | 단계별 산출물, 검증 기준, 우선순위와 리스크 관리 |
 | [Phase 0 실행 문서](./phase-0.md) | 개발환경, 계약 산출물, 실행·검증 방법 |
+| [로컬 개발 환경](./local-development.md) | PostgreSQL, migration, API 실행·검증 방법 |
 | [Unified Data Model](./data-model.md) | 핵심 Entity, ERD, Event 원장 원칙 |
 | [Event Catalog](./event-catalog.md) | Event Envelope와 표준 Event 정의 |
 | [Dataset Mapping](./dataset-mapping.md) | 외부 데이터 검사·정규화·Provenance 계획 |

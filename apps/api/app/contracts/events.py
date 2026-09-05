@@ -84,4 +84,6 @@ class JourneyEvent(BaseModel):
             raise ValueError("failed events require error_code")
         if self.status != EventStatus.FAILED and self.error_code:
             raise ValueError("error_code is allowed only for failed events")
+        if self.occurred_at.tzinfo is None or self.occurred_at.utcoffset() is None:
+            raise ValueError("occurred_at must include a timezone offset")
         return self
