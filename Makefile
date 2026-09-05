@@ -1,4 +1,4 @@
-.PHONY: api-dev api-test api-lint web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi test-pipelines
+.PHONY: api-dev api-test api-lint web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 test-pipelines
 
 api-dev:
 	cd apps/api && uv run uvicorn app.main:app --reload
@@ -39,5 +39,8 @@ normalize-financial-products:
 normalize-bpi:
 	python3 -m pipelines.normalize.bpi2017
 
+normalize-banking77:
+	python3 -m pipelines.normalize.banking77_intents
+
 test-pipelines:
-	python3 -m unittest pipelines.normalize.test_pii pipelines.normalize.test_financial_products pipelines.normalize.test_bpi2017
+	python3 -m unittest pipelines.normalize.test_pii pipelines.normalize.test_financial_products pipelines.normalize.test_bpi2017 pipelines.normalize.test_banking77_intents

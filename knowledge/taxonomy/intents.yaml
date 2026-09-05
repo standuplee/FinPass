@@ -1,13 +1,30 @@
 schema_version: "1.0"
 intents:
-  - code: VERIFY_SOURCE_OF_FUNDS
-    banking77_labels: [verify_source_of_funds]
-    journey_steps: [INCOME_VERIFICATION]
-  - code: UNABLE_TO_VERIFY_IDENTITY
+  - code: IDENTITY_VERIFICATION_FAILURE
+    journey_step: IDENTITY_VERIFICATION
+    banking77_labels: [unable_to_verify_identity]
+  - code: IDENTITY_VERIFICATION_REQUEST
+    journey_step: IDENTITY_VERIFICATION
     banking77_labels: [verify_my_identity]
-    journey_steps: [IDENTITY_VERIFICATION]
-    review_required: true
+  - code: IDENTITY_VERIFICATION_EXPLANATION
+    journey_step: IDENTITY_VERIFICATION
+    banking77_labels: [why_verify_identity]
+  - code: SOURCE_OF_FUNDS_VERIFICATION
+    journey_step: INCOME_VERIFICATION
+    banking77_labels: [verify_source_of_funds]
+  - code: PRODUCT_ELIGIBILITY_AGE
+    journey_step: PRODUCT_SELECTION
+    banking77_labels: [age_limit]
+  - code: PRODUCT_ELIGIBILITY_REGION
+    journey_step: PRODUCT_SELECTION
+    banking77_labels: [country_support]
+  - code: CUSTOMER_INFORMATION_UPDATE
+    journey_step: BUSINESS_INFORMATION
+    banking77_labels: [edit_personal_details]
+  - code: AUTHENTICATION_SUPPORT
+    journey_step: null
+    banking77_labels: [passcode_forgotten]
   - code: DOCUMENT_SUBMISSION_HELP
+    journey_step: DOCUMENT_SUBMISSION
     banking77_labels: []
-    journey_steps: [DOCUMENT_SUBMISSION]
     internal_only: true
