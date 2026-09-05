@@ -23,6 +23,7 @@ Phase 0는 제품 기능을 확장하기 전에 Web/API 실행 기반, 데이터
 | 상품 중복 제거·소비자 Segment 집계 | `pipelines/normalize/financial_products.py` | 완료 |
 | BPI Event·Case Feature·전이 정규화 | `pipelines/normalize/bpi2017.py` | 완료 |
 | Banking77 전체 Intent 범위 매핑 | `pipelines/normalize/banking77_intents.py` | 완료 |
+| 정규화 데이터 통합 Quality Gate | `pipelines/validate/quality_gate.py` | 완료, 63/63 통과 |
 | 실제 데이터 Profile | `docs/datasets/profile-2026-09-05.md` | 완료 |
 
 현재 실행 환경에는 Node.js, pnpm, uv, Docker 및 Python 3.12가 설치되어 있지 않아 런타임 테스트와 Lockfile 생성은 보류 상태다. JSON/YAML 문법과 저장소 정적 구조는 검증했다. 요구 도구가 준비되면 아래 명령으로 Release Gate를 확인한다.

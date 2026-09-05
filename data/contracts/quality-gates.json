@@ -1,0 +1,72 @@
+{
+  "contract_version": "1.0",
+  "datasets": {
+    "consultations": {
+      "report": "data/processed/consultations/quality-report.json",
+      "expected_counts": {
+        "consultations": 65259,
+        "qa": 89994,
+        "rag_documents": 44995,
+        "pii_residual_failures": 0,
+        "excluded_validation_overlap_source": 3,
+        "excluded_validation_overlap_label": 6
+      },
+      "jsonl_rows": {
+        "consultations": 65259,
+        "qa": 89994,
+        "rag": 44995
+      }
+    },
+    "financial_products": {
+      "report": "data/processed/financial-products/quality-report.json",
+      "expected_counts": {
+        "product_source_records": 20000,
+        "products": 10000,
+        "product_duplicates_removed": 10000,
+        "recommendation_cases": 9001,
+        "product_names_type_coercions": 4,
+        "consumer_source_rows": 385019,
+        "consumer_segment_aggregates": 169
+      },
+      "jsonl_rows": {
+        "products": 10000,
+        "recommendation_cases": 9001,
+        "segment_aggregates": 169
+      }
+    },
+    "bpi2017": {
+      "report": "data/processed/process-events/quality-report.json",
+      "expected_counts": {
+        "events": 1202267,
+        "cases": 31509,
+        "duplicate_normalized_events": 0,
+        "transitions": 1170758,
+        "transition_types": 178
+      },
+      "jsonl_rows": {
+        "events": 1202267,
+        "case_features": 31509,
+        "transition_counts": 178
+      }
+    },
+    "banking77": {
+      "report": "data/processed/intents/banking77/quality-report.json",
+      "expected_top_level": {
+        "label_count": 77
+      },
+      "expected_split_counts": {
+        "train": 10003,
+        "test": 3080
+      },
+      "expected_label_scope_counts": {
+        "DIRECT": 4,
+        "RELATED": 4,
+        "OUT_OF_SCOPE": 69
+      },
+      "jsonl_rows": {
+        "train": 10003,
+        "test": 3080
+      }
+    }
+  }
+}

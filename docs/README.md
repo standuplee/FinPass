@@ -15,6 +15,7 @@ FinPass AI는 금융소비자가 앱, 챗봇, 콜센터, 영업점 사이를 이
 | [Dataset Mapping](./dataset-mapping.md) | 외부 데이터 검사·정규화·Provenance 계획 |
 | [Dataset Profile](./datasets/profile-2026-09-05.md) | 확보한 원본의 실제 Schema, 규모와 품질 이슈 |
 | [Normalization Spec](./datasets/normalization-spec.md) | 데이터셋별 정규화 출력과 개인정보 처리 원칙 |
+| [Dataset Quality Gates](./datasets/quality-gates.md) | 정규화 데이터의 통합 승인 기준과 실행 방법 |
 | [OpenAPI 초안](./api/openapi.yaml) | Phase 0 HTTP 계약 초안 |
 
 ## MVP 핵심 시나리오
