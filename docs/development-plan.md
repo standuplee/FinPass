@@ -47,6 +47,8 @@
 
 ## 4. Phase 1 — Journey 수직 슬라이스
 
+Phase 1 착수 전 Synthetic Journey v1 10,000건과 Failure Feature Snapshot 생성 및 검증을 완료한다.
+
 ### 작업
 
 - Journey 생성과 append-only Event 저장

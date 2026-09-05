@@ -1,0 +1,1 @@
+"""Synthetic FinPass journey generation."""

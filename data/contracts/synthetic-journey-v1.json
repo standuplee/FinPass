@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "dataset_snapshot": "2026-09-05",
+  "seed": 20260905,
+  "journey_count": 10000,
+  "scenario_counts": {
+    "NORMAL": 6500,
+    "RETRY_EXPECTED": 1500,
+    "ASSISTANCE_RECOMMENDED": 1500,
+    "CRITICAL_FAILURE": 500
+  },
+  "error_codes": {
+    "retryable_income_verification": "A104",
+    "critical_income_verification": "SYS500"
+  },
+  "time_window": {
+    "start": "2026-08-08T00:00:00+00:00",
+    "end": "2026-09-05T00:00:00+00:00"
+  },
+  "source_reports": {
+    "quality_gate": "data/processed/quality-gate.json",
+    "bpi_cases": "data/processed/process-events/case_features.jsonl",
+    "consumer_segments": "data/processed/consumers/segment_aggregates.jsonl"
+  }
+}
