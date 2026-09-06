@@ -30,6 +30,7 @@ data/synthetic/**
 *.pkl
 *.onnx
 *.bin
+*.tsbuildinfo
 
 # Local infrastructure
 .postgres/
