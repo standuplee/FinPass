@@ -189,3 +189,26 @@ def test_consent_context_pass_and_consultation_lifecycle() -> None:
     revoked = client.post(f"/api/v1/journeys/consents/{consent_body['id']}/revoke")
     assert revoked.status_code == 200
     assert revoked.json()["status"] == "REVOKED"
+
+
+def test_analytics_endpoints_return_aggregates() -> None:
+    journey = client.post("/api/v1/journeys", json={}).json()
+    payload = event_payload(
+        journey["id"], journey["customer_id"], str(uuid4()),
+        "INCOME_VERIFICATION_FAILED", "INCOME_VERIFICATION", "FAILED",
+        datetime(2026, 9, 6, tzinfo=UTC), retry_count=1, error_code="A104",
+    )
+    assert client.post(f"/api/v1/journeys/{journey['id']}/events", json=payload).status_code == 200
+
+    summary = client.get("/api/v1/analytics/journeys")
+    assert summary.status_code == 200
+    assert summary.json()["total_journeys"] == 1
+    assert summary.json()["top_error_code"] == "A104"
+
+    failures = client.get("/api/v1/analytics/failures")
+    assert failures.status_code == 200
+    assert {item["key"] for item in failures.json()} == {"A104", "INCOME_VERIFICATION"}
+
+    insight = client.get("/api/v1/analytics/insights")
+    assert insight.status_code == 200
+    assert "A104" in insight.json()["text"]

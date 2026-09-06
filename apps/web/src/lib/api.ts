@@ -163,3 +163,28 @@ export function completeConsultation(
     body: JSON.stringify(body),
   });
 }
+
+export type AnalyticsSummary = {
+  total_journeys: number;
+  completion_rate: number;
+  failure_rate: number;
+  support_conversion_rate: number;
+  average_journey_duration_ms: number;
+  top_failure_step: string | null;
+  top_error_code: string | null;
+};
+
+export type AnalyticsFailure = { category: string; key: string; count: number };
+export type AnalyticsInsight = { text: string; based_on: AnalyticsFailure[] };
+
+export function getAnalyticsSummary() {
+  return request<AnalyticsSummary>("/api/v1/analytics/journeys");
+}
+
+export function getAnalyticsFailures() {
+  return request<AnalyticsFailure[]>("/api/v1/analytics/failures");
+}
+
+export function getAnalyticsInsight() {
+  return request<AnalyticsInsight>("/api/v1/analytics/insights");
+}

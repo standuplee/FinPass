@@ -87,3 +87,24 @@ class CompleteConsultationRequest(BaseModel):
     outcome: str = Field(min_length=1, max_length=200)
     next_step: str = Field(min_length=1, max_length=40)
     notes: str | None = Field(default=None, max_length=4000)
+
+
+class AnalyticsSummary(BaseModel):
+    total_journeys: int
+    completion_rate: float
+    failure_rate: float
+    support_conversion_rate: float
+    average_journey_duration_ms: int
+    top_failure_step: str | None
+    top_error_code: str | None
+
+
+class AnalyticsFailure(BaseModel):
+    category: str
+    key: str
+    count: int
+
+
+class AnalyticsInsight(BaseModel):
+    text: str
+    based_on: list[AnalyticsFailure]
