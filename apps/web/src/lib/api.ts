@@ -109,6 +109,22 @@ export function analyzeJourney(journeyId: string) {
   return request<ContextInterpretation>(`/api/v1/journeys/${journeyId}/analyze`, { method: "POST" });
 }
 
+export type JourneyChatResponse = {
+  answer: string;
+  current_step: JourneyStep;
+  error_codes: string[];
+  retry_count: number;
+  suggested_channels: ("CALL_CENTER" | "BRANCH")[];
+  context_used: string[];
+};
+
+export function askJourneyChat(journeyId: string, message: string) {
+  return request<JourneyChatResponse>(`/api/v1/journeys/${journeyId}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
 export type RecommendedAction = {
   action_code: string;
   title: string;

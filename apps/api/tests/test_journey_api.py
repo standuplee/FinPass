@@ -267,3 +267,24 @@ def test_journey_context_interpretation_is_grounded_in_events() -> None:
     assert actions.status_code == 200
     assert actions.json()[0]["action_code"] == "VERIFY_ALTERNATE_INCOME"
     assert actions.json()[0]["evidence"][-1]["source_type"] == "MANUAL"
+
+
+def test_journey_chat_uses_failure_context_and_recommends_handoff() -> None:
+    journey = client.post("/api/v1/journeys", json={}).json()
+    payload = event_payload(
+        journey["id"], journey["customer_id"], str(uuid4()),
+        "INCOME_VERIFICATION_FAILED", "INCOME_VERIFICATION", "FAILED",
+        datetime(2026, 9, 6, tzinfo=UTC), retry_count=3, error_code="A104",
+    )
+    assert client.post(f"/api/v1/journeys/{journey['id']}/events", json=payload).status_code == 200
+
+    response = client.post(
+        f"/api/v1/journeys/{journey['id']}/chat",
+        json={"message": "소득 인증 오류를 어떻게 해결하나요?"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert "A104" in body["answer"]
+    assert body["retry_count"] == 3
+    assert body["suggested_channels"] == ["CALL_CENTER", "BRANCH"]
+    assert "FAILURE_EVIDENCE" in body["context_used"]

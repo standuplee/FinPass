@@ -26,6 +26,8 @@ from app.modules.journey.schemas import (
     CreateJourneyRequest,
     EventWriteResult,
     JourneyRead,
+    JourneyChatRequest,
+    JourneyChatResponse,
 )
 from app.modules.journey.service import (
     JourneyConflictError,
@@ -69,6 +71,35 @@ def analyze_journey(journey_id: UUID, session: DatabaseSession) -> ContextInterp
         return interpret_journey(session, journey_id)
     except JourneyNotFoundError as error:
         raise not_found(error) from error
+
+
+@router.post("/{journey_id}/chat", response_model=JourneyChatResponse)
+def chat_about_journey(
+    journey_id: UUID, request: JourneyChatRequest, session: DatabaseSession
+) -> JourneyChatResponse:
+    """Answer a customer question using only the current Journey context."""
+    try:
+        interpretation = interpret_journey(session, journey_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+
+    error_text = ", ".join(interpretation.error_codes) or "없음"
+    answer = (
+        f"현재 {interpretation.current_step.value} 단계에서 {error_text} 오류가 "
+        f"{interpretation.retry_count}회 확인되었습니다. "
+        "잠시 후 다시 시도해도 같은 문제가 반복되면, 사업자 소득금액증명원이나 "
+        "부가세 과세표준증명원으로 대체 제출할 수 있습니다. "
+        "상담원이 지금 진행 상황을 이어받을 수 있도록 가까운 영업점 방문 또는 "
+        "콜센터 연결을 권해드립니다."
+    )
+    return JourneyChatResponse(
+        answer=answer,
+        current_step=interpretation.current_step,
+        error_codes=interpretation.error_codes,
+        retry_count=interpretation.retry_count,
+        suggested_channels=["CALL_CENTER", "BRANCH"],
+        context_used=["CURRENT_STEP", "FAILURE_EVIDENCE", "RETRY_COUNT", "CUSTOMER_INTENT"],
+    )
 
 
 @router.get("/{journey_id}/actions", response_model=list[RecommendedActionOutput])

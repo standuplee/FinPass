@@ -89,6 +89,19 @@ class CompleteConsultationRequest(BaseModel):
     notes: str | None = Field(default=None, max_length=4000)
 
 
+class JourneyChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+
+
+class JourneyChatResponse(BaseModel):
+    answer: str
+    current_step: JourneyStep
+    error_codes: list[str]
+    retry_count: int
+    suggested_channels: list[str]
+    context_used: list[str]
+
+
 class AnalyticsSummary(BaseModel):
     total_journeys: int
     completion_rate: float
