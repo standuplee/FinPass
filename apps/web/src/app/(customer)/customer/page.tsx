@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   appendJourneyEvent,
   createConsent,
   createContextPass,
+  getJourney,
   createJourney,
   type Journey,
   type JourneyStep,
@@ -41,6 +42,19 @@ export default function CustomerPage() {
   const [consentChecked, setConsentChecked] = useState(false);
   const sessionId = useMemo(() => crypto.randomUUID(), []);
 
+  useEffect(() => {
+    const savedJourneyId = window.localStorage.getItem("finpass_journey_id");
+    if (!savedJourneyId) return;
+    getJourney(savedJourneyId)
+      .then((savedJourney) => {
+        setJourney(savedJourney);
+        const failures = savedJourney.events.filter((event) => event.status === "FAILED");
+        setRetryCount(Math.max(...failures.map((event) => event.retry_count), 0));
+        setNotice("저장된 Journey를 복원했습니다. 중단된 단계부터 계속 진행하세요.");
+      })
+      .catch(() => window.localStorage.removeItem("finpass_journey_id"));
+  }, []);
+
   const currentIndex = Math.max(0, steps.findIndex((step) => step.id === journey?.current_step));
   const currentStep = steps[currentIndex];
   const canStart = journey === null;
@@ -51,6 +65,7 @@ export default function CustomerPage() {
     setError(null);
     try {
       const created = await createJourney({ customer_type: "SOLE_PROPRIETOR" });
+      window.localStorage.setItem("finpass_journey_id", created.id);
       setJourney(created);
       await writeEvent(created, "JOURNEY_STARTED", "PRODUCT_SELECTION", "STARTED");
       setNotice("개인사업자 신용대출 신청을 시작했습니다.");
@@ -131,6 +146,7 @@ export default function CustomerPage() {
     try {
       const consent = await createConsent(journey.id);
       const pass = await createContextPass(journey.id, consent.id);
+      window.localStorage.setItem("finpass_context_pass_id", pass.id);
       setContextPass(pass);
       setNotice("상담원에게 필요한 최소 정보만 공유했습니다. 아래 Pass ID를 상담원에게 전달하세요.");
     } catch (cause) {
