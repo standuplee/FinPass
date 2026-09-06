@@ -1,4 +1,4 @@
-.PHONY: api-dev api-test api-lint api-migrate rag-index evaluate-ai demo-e2e web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
+.PHONY: api-dev api-test api-lint api-migrate rag-index evaluate-ai demo-e2e web-dev web-check web-e2e db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
 
 api-dev:
 	cd apps/api && uv run uvicorn app.main:app --reload
@@ -26,6 +26,9 @@ web-dev:
 
 web-check:
 	pnpm typecheck:web
+
+web-e2e:
+	cd apps/web && pnpm e2e
 
 db-up:
 	docker compose up -d postgres
