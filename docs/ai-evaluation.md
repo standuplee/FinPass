@@ -24,3 +24,7 @@ make evaluate-ai
 
 후속 단계에서는 실제 상담 Golden Set과 pgvector 검색 결과를 추가해
 `Recall@K`, `Retrieval Precision`, `Grounding Rate`를 평가한다.
+
+pgvector가 연결된 환경에서는 평가 리포트의 `retrieval` 섹션에 Top-K
+검색 건수와 embedding 차원이 기록된다. DB가 없는 CI에서는 해당 섹션이
+`not_available`로 남고 나머지 계약 평가를 계속 수행한다.

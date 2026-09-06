@@ -6,6 +6,8 @@ from app.contracts.journey import JourneyFixture
 from app.modules.journey.intent import classify_intent
 from app.modules.rag.service import deterministic_embedding
 from app.modules.journey.state import project_journey
+from app.infrastructure.database import SessionLocal
+from app.modules.rag.service import search
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/synthetic/fixtures"
@@ -48,6 +50,19 @@ def evaluate() -> dict[str, object]:
         for key in checks
     }
     fallback = deterministic_embedding("fallback health check")
+    retrieval = {"status": "not_available", "top_k_count": 0}
+    session = SessionLocal()
+    try:
+        documents = search(session, "소득 인증 A104", limit=3)
+        retrieval = {
+            "status": "available",
+            "top_k_count": len(documents),
+            "embedding_dimension": len(documents[0].embedding) if documents else 64,
+        }
+    except Exception:
+        pass
+    finally:
+        session.close()
     report = {
         "version": "1.0",
         "fixture_count": len(results),
@@ -55,6 +70,7 @@ def evaluate() -> dict[str, object]:
             **metrics,
             "fallback_success": float(len(fallback) == 64 and all(math.isfinite(value) for value in fallback)),
         },
+        "retrieval": retrieval,
         "fixtures": results,
     }
     REPORT.parent.mkdir(parents=True, exist_ok=True)
