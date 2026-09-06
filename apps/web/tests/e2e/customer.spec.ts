@@ -45,5 +45,5 @@ test("customer journey starts and restores after refresh", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByText("저장된 Journey를 복원했습니다.")).toBeVisible();
-  await expect(page.getByText("상품 선택")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "상품 선택" })).toBeVisible();
 });
