@@ -191,6 +191,36 @@ def test_consent_context_pass_and_consultation_lifecycle() -> None:
     assert revoked.json()["status"] == "REVOKED"
 
 
+def test_consultation_completion_resumes_failed_journey() -> None:
+    journey = client.post("/api/v1/journeys", json={}).json()
+    clock = datetime(2026, 9, 6, tzinfo=UTC)
+    for retry in range(1, 4):
+        payload = event_payload(
+            journey["id"], journey["customer_id"], str(uuid4()),
+            "INCOME_VERIFICATION_FAILED", "INCOME_VERIFICATION", "FAILED",
+            clock, retry_count=retry, error_code="A104",
+        )
+        response = client.post(f"/api/v1/journeys/{journey['id']}/events", json=payload)
+        assert response.status_code == 200
+        clock += timedelta(seconds=1)
+    consent = client.post(f"/api/v1/journeys/{journey['id']}/consents", json={}).json()
+    context = client.post(
+        f"/api/v1/journeys/{journey['id']}/context-pass",
+        params={"consent_id": consent["id"]},
+    ).json()
+    consultation = client.post(
+        f"/api/v1/journeys/context-pass/{context['id']}/consultations"
+    ).json()
+    completed = client.post(
+        f"/api/v1/journeys/consultations/{consultation['id']}/complete",
+        json={"outcome": "대체 증빙 안내", "next_step": "DOCUMENT_SUBMISSION"},
+    )
+    assert completed.status_code == 200
+    resumed = client.get(f"/api/v1/journeys/{journey['id']}").json()
+    assert resumed["status"] == "RESUMED"
+    assert resumed["current_step"] == "DOCUMENT_SUBMISSION"
+
+
 def test_analytics_endpoints_return_aggregates() -> None:
     journey = client.post("/api/v1/journeys", json={}).json()
     payload = event_payload(

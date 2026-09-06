@@ -27,6 +27,7 @@ from app.modules.journey.schemas import (
 from app.modules.journey.service import (
     JourneyConflictError,
     JourneyNotFoundError,
+    event_contract,
     load_journey,
     request_hash,
 )
@@ -169,8 +170,7 @@ def complete_consultation(
     session.add(stored_event)
     projection = project_journey(
         [
-            JourneyEvent.model_validate(event, from_attributes=True)
-            for event in journey.events
+            event_contract(event) for event in journey.events
         ]
         + [resume_event]
     )

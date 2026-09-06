@@ -82,3 +82,12 @@ API Key를 저장소에 커밋하지 않는다. 현재 pgvector 컬럼은 64차�
 
 통합 테스트는 Journey 생성과 Timeline 저장, Event/요청 멱등성, 잘못된
 식별자와 시간 거부, A104 3회 실패 후 `ASSISTANCE_RECOMMENDED` 판정을 검증한다.
+
+대표 Customer → Agent → Admin 흐름은 개발 DB에서 다음 명령으로 재현한다.
+
+```bash
+make demo-e2e
+```
+
+명령은 A104 3회 실패, Consent·Context Pass, 상담 완료, 서류 제출 단계
+Resume, Analytics 반영 결과를 한 번에 출력한다.
