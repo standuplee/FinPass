@@ -41,6 +41,12 @@ uv run alembic upgrade head
 uv run uvicorn app.main:app --reload
 ```
 
+서비스 상태는 다음 엔드포인트에서 확인할 수 있다.
+
+- `GET /health`: 프로세스가 실행 중인지 확인한다.
+- `GET /ready`: PostgreSQL 연결까지 확인하며, DB가 unavailable이면 `503`을
+  반환한다.
+
 Journey API는 다음 수직 슬라이스를 제공한다.
 
 - `POST /api/v1/journeys`: 개인사업자 대출 Journey 생성
