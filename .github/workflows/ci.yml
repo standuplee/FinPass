@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: finpass
+          POSTGRES_PASSWORD: finpass
+          POSTGRES_DB: finpass_test
+        options: >-
+          --health-cmd "pg_isready -U finpass -d finpass_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.8.x"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: uv sync --locked
+      - name: Apply migrations
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+psycopg://finpass:finpass@localhost:5432/finpass_test
+        run: uv run alembic upgrade head
+      - name: Run API checks
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+psycopg://finpass:finpass@localhost:5432/finpass_test
+        run: |
+          uv run ruff check .
+          uv run pytest
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install web dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run web checks
+        run: |
+          pnpm typecheck:web
+          pnpm lint:web
+          pnpm build:web
