@@ -27,18 +27,45 @@ await agent.route(`**/api/v1/journeys/${journeyId}/actions`, (route) => route.fu
 await agent.goto(`${baseURL}/agent`);
 await agent.getByLabel("Context Pass ID").fill(passId);
 await agent.getByRole("button", { name: "Context 조회" }).click();
-await agent.screenshot({ path: `${outputDir}/02-agent-copilot.png`, fullPage: true });
+await agent.screenshot({ path: `${outputDir}/04-agent-copilot.png`, fullPage: true });
 
 const admin = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 await admin.route("**/api/v1/analytics/journeys", (route) => route.fulfill({ json: { total_journeys: 1248, completion_rate: 72.4, failure_rate: 18.7, support_conversion_rate: 11.3, average_journey_duration_ms: 252000, top_failure_step: "INCOME_VERIFICATION", top_error_code: "A104" } }));
 await admin.route("**/api/v1/analytics/failures", (route) => route.fulfill({ json: [{ category: "step", key: "INCOME_VERIFICATION", count: 233 }, { category: "error_code", key: "A104", count: 187 }] }));
 await admin.route("**/api/v1/analytics/insights", (route) => route.fulfill({ json: { text: "최근 소득인증 단계의 A104 오류가 전체 실패의 37%를 차지하며 상담 전환율을 높이고 있습니다.", based_on: [] } }));
 await admin.goto(`${baseURL}/admin`);
-await admin.screenshot({ path: `${outputDir}/03-admin-analytics.png`, fullPage: true });
+await admin.screenshot({ path: `${outputDir}/05-admin-analytics.png`, fullPage: true });
 
 const customer = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 2 });
+const customerJourneyId = "31000000-0000-4000-8000-000000000002";
+const customerId = "21000000-0000-4000-8000-000000000002";
+const customerEvents = [];
+await customer.route("**/api/v1/journeys", (route) => route.fulfill({ status: 201, json: {
+  id: customerJourneyId, customer_id: customerId, product_type: "SOLE_PROPRIETOR_LOAN", status: "IN_PROGRESS", current_step: "PRODUCT_SELECTION", started_at: new Date().toISOString(), updated_at: new Date().toISOString(), events: [],
+} }));
+await customer.route(`**/api/v1/journeys/${customerJourneyId}/events`, async (route) => {
+  const event = route.request().postDataJSON();
+  customerEvents.push(event);
+  const next = { JOURNEY_STARTED: "PRODUCT_SELECTION", PRODUCT_VIEWED: "BUSINESS_INFORMATION", BUSINESS_INFORMATION_COMPLETED: "IDENTITY_VERIFICATION", IDENTITY_VERIFICATION_FAILED: "IDENTITY_VERIFICATION", IDENTITY_VERIFICATION_COMPLETED: "LIMIT_CHECK", LIMIT_CHECK_FAILED: "LIMIT_CHECK", LIMIT_CHECK_COMPLETED: "INCOME_VERIFICATION" }[event.event_type] ?? "INCOME_VERIFICATION";
+  await route.fulfill({ json: { event: { ...event, created_at: new Date().toISOString() }, journey_status: "IN_PROGRESS", current_step: next, idempotent_replay: false } });
+});
+await customer.route(`**/api/v1/journeys/${customerJourneyId}`, (route) => route.fulfill({ json: { id: customerJourneyId, customer_id: customerId, product_type: "SOLE_PROPRIETOR_LOAN", status: "IN_PROGRESS", current_step: "PRODUCT_SELECTION", started_at: new Date().toISOString(), updated_at: new Date().toISOString(), events: customerEvents } }));
+await customer.route(`**/api/v1/journeys/${customerJourneyId}/chat`, (route) => route.fulfill({ json: { answer: "현재 본인 인증 단계에서 AUTH_TIMEOUT 오류가 확인되었습니다. 잠시 후 다시 시도하고, 문제가 반복되면 가까운 영업점 방문이나 콜센터 연결을 이용해 주세요.", current_step: "IDENTITY_VERIFICATION", error_codes: ["AUTH_TIMEOUT"], retry_count: 1, suggested_channels: ["CALL_CENTER", "BRANCH"], context_used: ["CURRENT_STEP", "FAILURE_EVIDENCE", "RETRY_COUNT", "CUSTOMER_INTENT"] } }));
 await customer.goto(`${baseURL}/customer`);
-await customer.screenshot({ path: `${outputDir}/01-customer-journey.png`, fullPage: true });
+await customer.getByRole("button", { name: "대출 신청 시작하기" }).click();
+await customer.getByRole("button", { name: "다음 단계로" }).click();
+await customer.getByRole("button", { name: "다음 단계로" }).click();
+await customer.getByRole("button", { name: "다음 단계로" }).click();
+await customer.screenshot({ path: `${outputDir}/01-identity-error.png`, fullPage: true });
+await customer.getByRole("button", { name: "확인" }).click();
+await customer.getByRole("button", { name: "다음 단계로" }).click();
+await customer.getByRole("button", { name: "다음 단계로" }).click();
+await customer.screenshot({ path: `${outputDir}/02-limit-error.png`, fullPage: true });
+await customer.getByRole("button", { name: "확인" }).click();
+await customer.getByRole("button", { name: "FinPass AI 상담 챗봇" }).click();
+await customer.getByPlaceholder("오류 해결 방법을 질문해 보세요").fill("왜 인증이 되지 않나요?");
+await customer.getByRole("button", { name: "질문" }).click();
+await customer.screenshot({ path: `${outputDir}/03-context-chat-handoff.png`, fullPage: true });
 
 await browser.close();
 console.log(`Saved proposal captures to ${outputDir}`);
