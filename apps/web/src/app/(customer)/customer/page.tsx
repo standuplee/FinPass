@@ -44,6 +44,8 @@ export default function CustomerPage() {
   const [consentChecked, setConsentChecked] = useState(false);
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatAnswer, setChatAnswer] = useState<JourneyChatResponse | null>(null);
+  const [activeError, setActiveError] = useState<{ code: string; title: string; message: string } | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const sessionId = useMemo(() => crypto.randomUUID(), []);
 
   useEffect(() => {
@@ -113,6 +115,16 @@ export default function CustomerPage() {
     setLoading(true);
     setError(null);
     try {
+      if (currentStep.id === "IDENTITY_VERIFICATION" && !journey.events.some((event) => event.event_type === "IDENTITY_VERIFICATION_FAILED")) {
+        await writeEvent(journey, "IDENTITY_VERIFICATION_FAILED", currentStep.id, "FAILED", "AUTH_TIMEOUT");
+        setActiveError({ code: "AUTH_TIMEOUT", title: "본인 인증을 완료할 수 없습니다", message: "인증 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요." });
+        return;
+      }
+      if (currentStep.id === "LIMIT_CHECK" && !journey.events.some((event) => event.event_type === "LIMIT_CHECK_FAILED")) {
+        await writeEvent(journey, "LIMIT_CHECK_FAILED", currentStep.id, "FAILED", "NT004");
+        setActiveError({ code: "NT004", title: "대출 한도를 조회할 수 없습니다", message: "현재 서버에서 응답이 없습니다. 이용에 불편을 드려 죄송합니다." });
+        return;
+      }
       if (currentStep.id === "INCOME_VERIFICATION") {
         const next = retryCount + 1;
         await writeEvent(journey, "INCOME_VERIFICATION_FAILED", currentStep.id, "FAILED", "A104");
@@ -180,6 +192,9 @@ export default function CustomerPage() {
         {canStart ? <button className="primary-button" disabled={loading} onClick={start}>{loading ? "준비 중..." : "대출 신청 시작하기"}</button> : <div className="action-row"><button className="primary-button" disabled={loading || journey.status === "SUPPORT_REQUESTED" || journey.status === "COMPLETED"} onClick={advance}>{loading ? "저장 중..." : currentStep?.id === "INCOME_VERIFICATION" ? "소득 인증 다시 시도" : currentStep?.id === "APPLICATION_COMPLETION" ? "신청 완료하기" : "다음 단계로"}</button>{isFailure && <button className="secondary-button" disabled={loading} onClick={requestSupport}>상담 연결하기</button>}</div>}
       </section>
       {journey && <section className="event-card"><div className="card-heading"><div><p className="section-kicker">나의 Journey</p><h2>진행 기록</h2></div><span className="event-count">{journey.events.length}개 이벤트</span></div><div className="event-list">{journey.events.slice().reverse().map((event) => <div className="event-row" key={event.event_id}><span className={`event-dot ${event.status === "FAILED" ? "failed" : ""}`} /><div><strong>{event.event_type.replaceAll("_", " ")}</strong><small>{event.journey_step} · {new Date(event.occurred_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</small></div>{event.error_code && <code>{event.error_code}</code>}</div>)}</div></section>}
+      {activeError && <div className="bank-alert-backdrop"><section className="bank-alert" role="alert"><div className="alert-icon">!</div><h2>{activeError.title}</h2><strong>응답코드({activeError.code})</strong><p>{activeError.message}</p><button className="primary-button" onClick={() => setActiveError(null)}>확인</button></section></div>}
+      <button className="chat-fab" aria-label="FinPass AI 상담 챗봇" onClick={() => setChatOpen((open) => !open)}>▣</button>
+      {chatOpen && <section className="chat-popover"><div className="card-heading"><div><p className="section-kicker">FINPASS AI</p><h2>무엇을 도와드릴까요?</h2></div><button className="chat-close" onClick={() => setChatOpen(false)}>×</button></div><p>현재 진행 중인 대출 단계와 오류를 확인해 답변합니다.</p><div className="chat-input"><input value={chatQuestion} onChange={(event) => setChatQuestion(event.target.value)} placeholder="오류 해결 방법을 질문해 보세요" onKeyDown={(event) => { if (event.key === "Enter") void askChat(); }} /><button className="secondary-button" disabled={loading || !chatQuestion.trim() || !journey} onClick={askChat}>질문</button></div>{chatAnswer && <div className="chat-answer"><strong>내 Journey를 반영한 답변</strong><p>{chatAnswer.answer}</p><div className="channel-actions"><button className="primary-button" onClick={requestSupport}>콜센터 연결</button><button className="secondary-button" onClick={requestSupport}>영업점 방문</button></div></div>}</section>}
       {isFailure && <section className="chat-card"><div className="section-kicker">FINPASS AI 상담 챗봇</div><h2>지금 상황을 바탕으로 안내받기</h2><p>현재 대출 단계와 반복 오류를 반영해 답변합니다. 처음부터 다시 설명하지 않아도 됩니다.</p><div className="chat-input"><input value={chatQuestion} onChange={(event) => setChatQuestion(event.target.value)} placeholder="예: 소득 인증 오류를 어떻게 해결하나요?" onKeyDown={(event) => { if (event.key === "Enter") void askChat(); }} /><button className="secondary-button" disabled={loading || !chatQuestion.trim()} onClick={askChat}>질문하기</button></div>{chatAnswer && <div className="chat-answer"><strong>현재 Journey 기반 답변</strong><p>{chatAnswer.answer}</p><small>반영된 Context: 현재 단계 · 실패 근거 · 재시도 횟수 · 고객 목적</small><div className="channel-actions"><button className="primary-button" onClick={requestSupport}>콜센터 연결</button><button className="secondary-button" onClick={requestSupport}>영업점 방문 안내</button></div></div>}</section>}
       {journey?.status === "SUPPORT_REQUESTED" && <section className="consent-card"><div className="section-kicker">CONTEXT SHARE CONSENT</div><h2>상담원에게 진행 상황을 공유할까요?</h2><p>전체 금융 로그가 아닌, 현재 대출 신청에 필요한 정보만 30분 동안 공유합니다.</p><label className="consent-check"><input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} /> <span>Journey 단계, 실패 오류, 재시도 횟수, 고객 목적을 공유하는 데 동의합니다.</span></label>{contextPass ? <div className="pass-result"><small>상담원에게 전달할 Context Pass ID</small><code>{contextPass.id}</code><span>만료: {new Date(contextPass.expires_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span></div> : <button className="primary-button" disabled={!consentChecked || loading} onClick={consentAndCreatePass}>{loading ? "발급 중..." : "동의하고 Context Pass 발급"}</button>}</section>}
     </main>
