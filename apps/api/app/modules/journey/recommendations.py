@@ -1,10 +1,30 @@
+from sqlalchemy import select
+
 from app.contracts.ai import EvidenceReference, RecommendedActionOutput
 from app.modules.journey.interpretation import interpret_journey
+from app.modules.journey.models import RagDocumentModel
+
+
+def retrieve_cases(session, query: str, limit: int = 3) -> list[EvidenceReference]:
+    """MVP lexical retrieval; pgvector embedding search is added behind this seam."""
+    terms = [term for term in query.split() if len(term) > 1][:3]
+    statement = select(RagDocumentModel).where(
+        RagDocumentModel.source_type == "CONSULTATION_CASE"
+    )
+    for term in terms:
+        statement = statement.where(RagDocumentModel.text.ilike(f"%{term}%"))
+    documents = session.scalars(statement.limit(limit)).all()
+    return [
+        EvidenceReference(source_type="CONSULTATION_CASE", source_id=document.id)
+        for document in documents
+    ]
 
 
 def recommend_actions(session, journey_id) -> list[RecommendedActionOutput]:
     context = interpret_journey(session, journey_id)
     evidence = [item for item in context.evidence if item.source_type == "JOURNEY_EVENT"]
+    query = f"{context.failure_step} {' '.join(context.error_codes)}"
+    similar_cases = retrieve_cases(session, query)
     if "A104" in context.error_codes:
         return [
             RecommendedActionOutput(
@@ -17,6 +37,7 @@ def recommend_actions(session, journey_id) -> list[RecommendedActionOutput]:
                 rationale="소득인증 A104 오류가 반복되어 대체 소득증빙 검토가 필요합니다.",
                 conditions=["고객 본인 확인", "최근 발급 서류 여부 확인"],
                 evidence=evidence
+                + similar_cases
                 + [
                     EvidenceReference(
                         source_type="MANUAL", source_id="income-verification-a104"
@@ -35,6 +56,7 @@ def recommend_actions(session, journey_id) -> list[RecommendedActionOutput]:
                     "이어가기 위한 조치입니다."
                 ),
                 evidence=evidence
+                + similar_cases
                 + [
                     EvidenceReference(
                         source_type="PRODUCT", source_id="SOLE_PROPRIETOR_LOAN"

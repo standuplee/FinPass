@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -133,3 +134,14 @@ class ConsultationModel(Base):
     notes: Mapped[str | None] = mapped_column(String(4000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RagDocumentModel(Base):
+    __tablename__ = "rag_documents"
+
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    source_type: Mapped[str] = mapped_column(String(40), index=True)
+    text: Mapped[str] = mapped_column(String)
+    metadata_json: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, default=dict)
+    embedding: Mapped[list[float]] = mapped_column(Vector(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

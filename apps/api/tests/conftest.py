@@ -11,7 +11,7 @@ def clean_database() -> None:
     with engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE consultations, context_passes, consents, "
+                "TRUNCATE rag_documents, consultations, context_passes, consents, "
                 "idempotency_records, journey_events, journeys, financial_products, "
                 "customers RESTART IDENTITY CASCADE"
             )
