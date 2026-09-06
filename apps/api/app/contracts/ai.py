@@ -25,6 +25,8 @@ class ContextInterpretation(BaseModel):
     error_codes: list[str]
     retry_count: Annotated[int, Field(ge=0)]
     customer_intent: str
+    intent_confidence: Annotated[float, Field(ge=0, le=1)] = 0.0
+    intent_source: Literal["RULE", "BANKING77", "LLM"] = "RULE"
     summary: str
     evidence: list[EvidenceReference] = Field(min_length=1)
 

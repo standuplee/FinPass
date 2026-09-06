@@ -1,5 +1,6 @@
 from app.contracts.ai import ContextInterpretation, EvidenceReference
 from app.contracts.events import EventStatus
+from app.modules.journey.intent import classify_intent
 from app.modules.journey.service import event_contract, load_journey
 
 
@@ -13,6 +14,7 @@ def interpret_journey(session, journey_id) -> ContextInterpretation:
     error_codes = list(dict.fromkeys(event.error_code for event in failures if event.error_code))
     retry_count = max((event.retry_count for event in events), default=0)
     failure_step = failures[-1].journey_step if failures else None
+    customer_intent, intent_confidence = classify_intent(journey.current_step, error_codes)
     if failure_step and error_codes:
         summary = (
             f"고객은 개인사업자 신용대출 신청 중 {failure_step.value} 단계에서 "
@@ -28,7 +30,9 @@ def interpret_journey(session, journey_id) -> ContextInterpretation:
         failure_step=failure_step,
         error_codes=error_codes,
         retry_count=retry_count,
-        customer_intent="SOLE_PROPRIETOR_LOAN_APPLICATION",
+        customer_intent=customer_intent,
+        intent_confidence=intent_confidence,
+        intent_source="RULE",
         summary=summary,
         evidence=[
             EvidenceReference(source_type="JOURNEY_EVENT", source_id=str(event.event_id))

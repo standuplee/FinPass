@@ -19,6 +19,7 @@ def search(
     *,
     source_type: str = "CONSULTATION_CASE",
     journey_step: str | None = None,
+    intent: str | None = None,
     limit: int = 3,
 ) -> list[RagDocumentModel]:
     statement = (
@@ -28,11 +29,16 @@ def search(
         .limit(limit * 5)
     )
     documents = session.scalars(statement).all()
-    if journey_step:
+    if journey_step or intent:
         filtered = [
             document
             for document in documents
-            if journey_step in document.text or journey_step in str(document.metadata_json)
+            if (
+                journey_step is None
+                or journey_step in document.text
+                or journey_step in str(document.metadata_json)
+            )
+            and (intent is None or intent in str(document.metadata_json))
         ]
         if filtered:
             documents = filtered

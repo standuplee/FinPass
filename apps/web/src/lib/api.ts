@@ -99,6 +99,8 @@ export type ContextInterpretation = {
   error_codes: string[];
   retry_count: number;
   customer_intent: string;
+  intent_confidence: number;
+  intent_source: "RULE" | "BANKING77" | "LLM";
   summary: string;
   evidence: { source_type: string; source_id: string; source_version?: string | null }[];
 };

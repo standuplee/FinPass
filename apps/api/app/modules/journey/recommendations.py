@@ -9,7 +9,12 @@ def recommend_actions(session, journey_id) -> list[RecommendedActionOutput]:
     query = f"{context.failure_step} {' '.join(context.error_codes)} 소득 증빙"
     similar_cases = [
         EvidenceReference(source_type="CONSULTATION_CASE", source_id=document.id)
-        for document in search(session, query, journey_step=str(context.failure_step))
+        for document in search(
+            session,
+            query,
+            journey_step=str(context.failure_step),
+            intent=context.customer_intent,
+        )
     ]
     if "A104" in context.error_codes:
         return [
