@@ -1,21 +1,14 @@
 """Index normalized RAG documents into PostgreSQL pgvector."""
 
-import hashlib
 import json
 from pathlib import Path
 
 from app.infrastructure.database import SessionLocal
 from app.modules.journey.models import RagDocumentModel
+from app.modules.rag.service import embedding
 
 ROOT = Path(__file__).resolve().parents[3]
 SOURCES = [ROOT / "data/processed/consultations/rag_documents.jsonl"]
-
-
-def embedding(text: str) -> list[float]:
-    """Deterministic local placeholder; replace with provider embeddings in Phase 3."""
-    value = text.encode()
-    digest = hashlib.sha256(value).digest() + hashlib.sha256(b"finpass:" + value).digest()
-    return [((digest[index] / 255) * 2) - 1 for index in range(64)]
 
 
 def main() -> None:

@@ -1,30 +1,16 @@
-from sqlalchemy import select
-
 from app.contracts.ai import EvidenceReference, RecommendedActionOutput
 from app.modules.journey.interpretation import interpret_journey
-from app.modules.journey.models import RagDocumentModel
-
-
-def retrieve_cases(session, query: str, limit: int = 3) -> list[EvidenceReference]:
-    """MVP lexical retrieval; pgvector embedding search is added behind this seam."""
-    terms = [term for term in query.split() if len(term) > 1][:3]
-    statement = select(RagDocumentModel).where(
-        RagDocumentModel.source_type == "CONSULTATION_CASE"
-    )
-    for term in terms:
-        statement = statement.where(RagDocumentModel.text.ilike(f"%{term}%"))
-    documents = session.scalars(statement.limit(limit)).all()
-    return [
-        EvidenceReference(source_type="CONSULTATION_CASE", source_id=document.id)
-        for document in documents
-    ]
+from app.modules.rag.service import search
 
 
 def recommend_actions(session, journey_id) -> list[RecommendedActionOutput]:
     context = interpret_journey(session, journey_id)
     evidence = [item for item in context.evidence if item.source_type == "JOURNEY_EVENT"]
-    query = f"{context.failure_step} {' '.join(context.error_codes)}"
-    similar_cases = retrieve_cases(session, query)
+    query = f"{context.failure_step} {' '.join(context.error_codes)} 소득 증빙"
+    similar_cases = [
+        EvidenceReference(source_type="CONSULTATION_CASE", source_id=document.id)
+        for document in search(session, query, journey_step=str(context.failure_step))
+    ]
     if "A104" in context.error_codes:
         return [
             RecommendedActionOutput(
