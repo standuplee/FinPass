@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.contracts.ai import ContextInterpretation
 from app.contracts.events import JourneyEvent
 from app.infrastructure.database import get_session
 from app.modules.journey.handoff import (
@@ -14,6 +15,7 @@ from app.modules.journey.handoff import (
     get_context_pass,
     revoke_consent,
 )
+from app.modules.journey.interpretation import interpret_journey
 from app.modules.journey.schemas import (
     CompleteConsultationRequest,
     ConsentRead,
@@ -56,6 +58,14 @@ def post_journey(request: CreateJourneyRequest, session: DatabaseSession) -> Jou
 def read_journey(journey_id: UUID, session: DatabaseSession) -> JourneyRead:
     try:
         return get_journey(session, journey_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+
+
+@router.post("/{journey_id}/analyze", response_model=ContextInterpretation)
+def analyze_journey(journey_id: UUID, session: DatabaseSession) -> ContextInterpretation:
+    try:
+        return interpret_journey(session, journey_id)
     except JourneyNotFoundError as error:
         raise not_found(error) from error
 

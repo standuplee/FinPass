@@ -212,3 +212,21 @@ def test_analytics_endpoints_return_aggregates() -> None:
     insight = client.get("/api/v1/analytics/insights")
     assert insight.status_code == 200
     assert "A104" in insight.json()["text"]
+
+
+def test_journey_context_interpretation_is_grounded_in_events() -> None:
+    journey = client.post("/api/v1/journeys", json={}).json()
+    payload = event_payload(
+        journey["id"], journey["customer_id"], str(uuid4()),
+        "INCOME_VERIFICATION_FAILED", "INCOME_VERIFICATION", "FAILED",
+        datetime(2026, 9, 6, tzinfo=UTC), retry_count=3, error_code="A104",
+    )
+    response = client.post(f"/api/v1/journeys/{journey['id']}/events", json=payload)
+    assert response.status_code == 200
+
+    interpreted = client.post(f"/api/v1/journeys/{journey['id']}/analyze")
+    assert interpreted.status_code == 200
+    body = interpreted.json()
+    assert body["failure_step"] == "INCOME_VERIFICATION"
+    assert body["error_codes"] == ["A104"]
+    assert body["evidence"][0]["source_type"] == "JOURNEY_EVENT"

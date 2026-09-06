@@ -7,9 +7,11 @@ import {
   createConsultation,
   getContextPass,
   getJourney,
+  analyzeJourney,
   type Consultation,
   type ContextPass,
   type Journey,
+  type ContextInterpretation,
 } from "@/lib/api";
 
 const labels: Record<string, string> = {
@@ -24,6 +26,7 @@ export default function AgentPage() {
   const [context, setContext] = useState<ContextPass | null>(null);
   const [journey, setJourney] = useState<Journey | null>(null);
   const [consultation, setConsultation] = useState<Consultation | null>(null);
+  const [interpretation, setInterpretation] = useState<ContextInterpretation | null>(null);
   const [outcome, setOutcome] = useState("대체 소득증빙 방법 안내");
   const [notes, setNotes] = useState("사업자 소득금액증명원 제출을 안내했습니다.");
   const [message, setMessage] = useState("Context Pass ID를 입력하면 고객의 업무 맥락을 불러옵니다.");
@@ -35,8 +38,10 @@ export default function AgentPage() {
     try {
       const loaded = await getContextPass(passId.trim());
       const loadedJourney = await getJourney(loaded.journey_id);
+      const interpreted = await analyzeJourney(loaded.journey_id);
       setContext(loaded);
       setJourney(loadedJourney);
+      setInterpretation(interpreted);
       setMessage("동의된 최소 Context를 확인했습니다. 상담을 시작하세요.");
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Context를 불러오지 못했습니다.");
@@ -74,7 +79,7 @@ export default function AgentPage() {
       <section className="agent-search"><label htmlFor="pass-id">Context Pass ID</label><div className="search-row"><input id="pass-id" value={passId} onChange={(event) => setPassId(event.target.value)} placeholder="예: 4f3c..." /><button className="primary-button" disabled={loading || !passId.trim()} onClick={loadContext}>{loading ? "불러오는 중..." : "Context 조회"}</button></div><p>{message}</p></section>
       {context && <>
         <section className="copilot-grid">
-          <article className="agent-panel context-summary"><div className="panel-title"><span className="section-kicker">AI CONTEXT SUMMARY</span><span className="status-pill">동의 범위 내</span></div><h2>개인사업자 신용대출 신청 중<br />소득인증 단계에서 도움이 필요합니다.</h2><p>고객은 {labels[context.payload.current_step] ?? context.payload.current_step}까지 진행했으며, {context.payload.error_codes.join(", ")} 오류가 {context.payload.retry_count}회 발생했습니다.</p><div className="intent-tag">고객 목적 · 대출 신청</div></article>
+          <article className="agent-panel context-summary"><div className="panel-title"><span className="section-kicker">AI CONTEXT SUMMARY</span><span className="status-pill">Event 근거 {interpretation?.evidence.length ?? 0}건</span></div><h2>{interpretation?.summary ?? "Journey Context를 해석하는 중입니다."}</h2><p>현재 단계: {labels[context.payload.current_step] ?? context.payload.current_step} · 오류: {context.payload.error_codes.join(", ") || "없음"} · 재시도: {context.payload.retry_count}회</p><div className="intent-tag">고객 목적 · {interpretation?.customer_intent === "SOLE_PROPRIETOR_LOAN_APPLICATION" ? "대출 신청" : interpretation?.customer_intent}</div></article>
           <article className="agent-panel"><div className="panel-title"><span className="section-kicker">FAILURE EVIDENCE</span><span className="warning-text">확인 필요</span></div>{failures.length ? <div className="evidence-list">{failures.map((event) => <div className="evidence-row" key={event.event_id}><strong>{event.error_code}</strong><span>{labels[event.journey_step] ?? event.journey_step} · 재시도 {event.retry_count}회</span></div>)}</div> : <p className="muted">실패 이벤트가 없습니다.</p>}</article>
         </section>
         <section className="agent-panel timeline-panel"><div className="panel-title"><div><span className="section-kicker">CUSTOMER JOURNEY TIMELINE</span><h2>업무 진행 기록</h2></div><span className="status-pill warning">{journey?.status}</span></div><div className="timeline">{journey?.events.map((event) => <div className="timeline-item" key={event.event_id}><span className={`event-dot ${event.status === "FAILED" ? "failed" : ""}`} /><div><strong>{event.event_type.replaceAll("_", " ")}</strong><small>{labels[event.journey_step] ?? event.journey_step} · {new Date(event.occurred_at).toLocaleString("ko-KR")}</small></div>{event.error_code && <code>{event.error_code}</code>}</div>)}</div></section>

@@ -91,6 +91,22 @@ export function getJourney(journeyId: string) {
   return request<Journey>(`/api/v1/journeys/${journeyId}`);
 }
 
+export type ContextInterpretation = {
+  journey_id: string;
+  current_step: JourneyStep;
+  completed_steps: JourneyStep[];
+  failure_step: JourneyStep | null;
+  error_codes: string[];
+  retry_count: number;
+  customer_intent: string;
+  summary: string;
+  evidence: { source_type: string; source_id: string; source_version?: string | null }[];
+};
+
+export function analyzeJourney(journeyId: string) {
+  return request<ContextInterpretation>(`/api/v1/journeys/${journeyId}/analyze`, { method: "POST" });
+}
+
 export type Consent = {
   id: string;
   journey_id: string;
