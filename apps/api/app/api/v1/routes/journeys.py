@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.contracts.ai import ContextInterpretation
+from app.contracts.ai import ContextInterpretation, RecommendedActionOutput
 from app.contracts.events import JourneyEvent
 from app.infrastructure.database import get_session
 from app.modules.journey.handoff import (
@@ -16,6 +16,7 @@ from app.modules.journey.handoff import (
     revoke_consent,
 )
 from app.modules.journey.interpretation import interpret_journey
+from app.modules.journey.recommendations import recommend_actions
 from app.modules.journey.schemas import (
     CompleteConsultationRequest,
     ConsentRead,
@@ -66,6 +67,16 @@ def read_journey(journey_id: UUID, session: DatabaseSession) -> JourneyRead:
 def analyze_journey(journey_id: UUID, session: DatabaseSession) -> ContextInterpretation:
     try:
         return interpret_journey(session, journey_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+
+
+@router.get("/{journey_id}/actions", response_model=list[RecommendedActionOutput])
+def get_journey_actions(
+    journey_id: UUID, session: DatabaseSession
+) -> list[RecommendedActionOutput]:
+    try:
+        return recommend_actions(session, journey_id)
     except JourneyNotFoundError as error:
         raise not_found(error) from error
 

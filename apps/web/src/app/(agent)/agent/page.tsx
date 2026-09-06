@@ -8,10 +8,12 @@ import {
   getContextPass,
   getJourney,
   analyzeJourney,
+  getJourneyActions,
   type Consultation,
   type ContextPass,
   type Journey,
   type ContextInterpretation,
+  type RecommendedAction,
 } from "@/lib/api";
 
 const labels: Record<string, string> = {
@@ -27,6 +29,7 @@ export default function AgentPage() {
   const [journey, setJourney] = useState<Journey | null>(null);
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [interpretation, setInterpretation] = useState<ContextInterpretation | null>(null);
+  const [actions, setActions] = useState<RecommendedAction[]>([]);
   const [outcome, setOutcome] = useState("대체 소득증빙 방법 안내");
   const [notes, setNotes] = useState("사업자 소득금액증명원 제출을 안내했습니다.");
   const [message, setMessage] = useState("Context Pass ID를 입력하면 고객의 업무 맥락을 불러옵니다.");
@@ -39,9 +42,11 @@ export default function AgentPage() {
       const loaded = await getContextPass(passId.trim());
       const loadedJourney = await getJourney(loaded.journey_id);
       const interpreted = await analyzeJourney(loaded.journey_id);
+      const recommended = await getJourneyActions(loaded.journey_id);
       setContext(loaded);
       setJourney(loadedJourney);
       setInterpretation(interpreted);
+      setActions(recommended);
       setMessage("동의된 최소 Context를 확인했습니다. 상담을 시작하세요.");
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Context를 불러오지 못했습니다.");
@@ -83,7 +88,7 @@ export default function AgentPage() {
           <article className="agent-panel"><div className="panel-title"><span className="section-kicker">FAILURE EVIDENCE</span><span className="warning-text">확인 필요</span></div>{failures.length ? <div className="evidence-list">{failures.map((event) => <div className="evidence-row" key={event.event_id}><strong>{event.error_code}</strong><span>{labels[event.journey_step] ?? event.journey_step} · 재시도 {event.retry_count}회</span></div>)}</div> : <p className="muted">실패 이벤트가 없습니다.</p>}</article>
         </section>
         <section className="agent-panel timeline-panel"><div className="panel-title"><div><span className="section-kicker">CUSTOMER JOURNEY TIMELINE</span><h2>업무 진행 기록</h2></div><span className="status-pill warning">{journey?.status}</span></div><div className="timeline">{journey?.events.map((event) => <div className="timeline-item" key={event.event_id}><span className={`event-dot ${event.status === "FAILED" ? "failed" : ""}`} /><div><strong>{event.event_type.replaceAll("_", " ")}</strong><small>{labels[event.journey_step] ?? event.journey_step} · {new Date(event.occurred_at).toLocaleString("ko-KR")}</small></div>{event.error_code && <code>{event.error_code}</code>}</div>)}</div></section>
-        <section className="agent-panel action-panel"><div className="panel-title"><div><span className="section-kicker">NEXT BEST ACTION</span><h2>상담원이 확인할 항목</h2></div><span className="status-pill">AI 추천</span></div><div className="action-card"><span>01</span><div><strong>대체 소득증빙 절차 안내</strong><p>사업자 소득금액증명원 또는 부가세 과세표준증명원 제출 가능 여부를 확인하세요.</p></div></div><div className="action-card"><span>02</span><div><strong>모바일 서류 제출 링크 제공</strong><p>상담 완료 후 고객은 서류 제출 단계에서 Journey를 재개합니다.</p></div></div>{!consultation ? <button className="primary-button" disabled={loading} onClick={startConsultation}>상담 시작하기</button> : consultation.status === "OPEN" ? <div className="consult-form"><label htmlFor="outcome">상담 결과</label><input id="outcome" value={outcome} onChange={(event) => setOutcome(event.target.value)} /><label htmlFor="notes">상담 메모</label><textarea id="notes" value={notes} onChange={(event) => setNotes(event.target.value)} /><button className="primary-button" disabled={loading} onClick={finishConsultation}>상담 완료 · 고객에게 전달</button></div> : <div className="success-box">✓ 상담 완료 · 고객은 {labels[consultation.next_step ?? "DOCUMENT_SUBMISSION"]}부터 재개합니다.</div>}</section>
+        <section className="agent-panel action-panel"><div className="panel-title"><div><span className="section-kicker">NEXT BEST ACTION</span><h2>상담원이 확인할 항목</h2></div><span className="status-pill">근거 기반 추천</span></div>{actions.map((action, index) => <div className="action-card" key={action.action_code}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{action.title}</strong><p>{action.description}</p><small className="action-rationale">근거: {action.evidence.map((item) => item.source_type).join(" · ")}</small></div></div>)}{!consultation ? <button className="primary-button" disabled={loading} onClick={startConsultation}>상담 시작하기</button> : consultation.status === "OPEN" ? <div className="consult-form"><label htmlFor="outcome">상담 결과</label><input id="outcome" value={outcome} onChange={(event) => setOutcome(event.target.value)} /><label htmlFor="notes">상담 메모</label><textarea id="notes" value={notes} onChange={(event) => setNotes(event.target.value)} /><button className="primary-button" disabled={loading} onClick={finishConsultation}>상담 완료 · 고객에게 전달</button></div> : <div className="success-box">✓ 상담 완료 · 고객은 {labels[consultation.next_step ?? "DOCUMENT_SUBMISSION"]}부터 재개합니다.</div>}</section>
       </>}
     </main>
   );

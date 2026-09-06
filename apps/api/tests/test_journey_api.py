@@ -230,3 +230,8 @@ def test_journey_context_interpretation_is_grounded_in_events() -> None:
     assert body["failure_step"] == "INCOME_VERIFICATION"
     assert body["error_codes"] == ["A104"]
     assert body["evidence"][0]["source_type"] == "JOURNEY_EVENT"
+
+    actions = client.get(f"/api/v1/journeys/{journey['id']}/actions")
+    assert actions.status_code == 200
+    assert actions.json()[0]["action_code"] == "VERIFY_ALTERNATE_INCOME"
+    assert actions.json()[0]["evidence"][-1]["source_type"] == "MANUAL"

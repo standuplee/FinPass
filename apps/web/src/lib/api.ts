@@ -107,6 +107,19 @@ export function analyzeJourney(journeyId: string) {
   return request<ContextInterpretation>(`/api/v1/journeys/${journeyId}/analyze`, { method: "POST" });
 }
 
+export type RecommendedAction = {
+  action_code: string;
+  title: string;
+  description: string;
+  rationale: string;
+  conditions: string[];
+  evidence: { source_type: string; source_id: string }[];
+};
+
+export function getJourneyActions(journeyId: string) {
+  return request<RecommendedAction[]>(`/api/v1/journeys/${journeyId}/actions`);
+}
+
 export type Consent = {
   id: string;
   journey_id: string;
