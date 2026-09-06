@@ -25,9 +25,9 @@ from app.modules.journey.schemas import (
     CreateConsentRequest,
     CreateJourneyRequest,
     EventWriteResult,
-    JourneyRead,
     JourneyChatRequest,
     JourneyChatResponse,
+    JourneyRead,
 )
 from app.modules.journey.service import (
     JourneyConflictError,

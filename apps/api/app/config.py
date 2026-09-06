@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str | None = None
     openai_embedding_model: str = "text-embedding-3-small"
+    cors_origins: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file="../../.env", extra="ignore")
 
