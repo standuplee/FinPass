@@ -1,0 +1,13 @@
+# Keep the deployment payload limited to the Next.js workspace.
+data/
+apps/api/
+docs/
+scripts/
+ml/
+infra/
+.pnpm-store/
+node_modules/
+**/node_modules/
+**/.next/
+.git/
+.github/
