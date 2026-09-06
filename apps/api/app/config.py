@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://finpass:finpass@localhost:5432/finpass"
     openai_api_key: str | None = None
     openai_model: str | None = None
+    openai_embedding_model: str = "text-embedding-3-small"
 
     model_config = SettingsConfigDict(env_file="../../.env", extra="ignore")
 

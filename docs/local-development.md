@@ -65,5 +65,20 @@ DATABASE_URL=postgresql+psycopg://finpass:finpass@localhost:5432/finpass_test \
 uv run ruff check .
 ```
 
+## Embedding Provider
+
+`OPENAI_API_KEY`가 설정되면 `text-embedding-3-small` 모델로 64차원
+embedding을 생성한다. OpenAI Embeddings API가 timeout 또는 오류를
+반환하면 deterministic local embedding으로 자동 전환한다.
+
+```bash
+export OPENAI_API_KEY="your_api_key_here"
+export OPENAI_EMBEDDING_MODEL="text-embedding-3-small"
+make rag-index
+```
+
+API Key를 저장소에 커밋하지 않는다. 현재 pgvector 컬럼은 64차원으로
+고정되어 있으므로 다른 모델을 사용할 때도 `dimensions=64`를 유지한다.
+
 통합 테스트는 Journey 생성과 Timeline 저장, Event/요청 멱등성, 잘못된
 식별자와 시간 거부, A104 3회 실패 후 `ASSISTANCE_RECOMMENDED` 판정을 검증한다.
