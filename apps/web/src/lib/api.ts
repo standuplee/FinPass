@@ -91,6 +91,30 @@ export function getJourney(journeyId: string) {
   return request<Journey>(`/api/v1/journeys/${journeyId}`);
 }
 
+export type Consent = {
+  id: string;
+  journey_id: string;
+  customer_id: string;
+  scope: string[];
+  status: "ACTIVE" | "REVOKED";
+  expires_at: string;
+  created_at: string;
+  revoked_at: string | null;
+};
+
+export function createConsent(journeyId: string, scope: string[] = ["JOURNEY_CONTEXT", "FAILURE_EVIDENCE"]) {
+  return request<Consent>(`/api/v1/journeys/${journeyId}/consents`, {
+    method: "POST",
+    body: JSON.stringify({ scope, ttl_minutes: 30 }),
+  });
+}
+
+export function createContextPass(journeyId: string, consentId: string) {
+  return request<ContextPass>(`/api/v1/journeys/${journeyId}/context-pass?consent_id=${consentId}`, {
+    method: "POST",
+  });
+}
+
 export type ContextPass = {
   id: string;
   journey_id: string;
