@@ -90,3 +90,52 @@ export function appendJourneyEvent(journeyId: string, event: JourneyEvent, idemp
 export function getJourney(journeyId: string) {
   return request<Journey>(`/api/v1/journeys/${journeyId}`);
 }
+
+export type ContextPass = {
+  id: string;
+  journey_id: string;
+  consent_id: string;
+  payload: {
+    current_product: string;
+    current_step: JourneyStep;
+    completed_steps: string[];
+    failure_step: string | null;
+    error_codes: string[];
+    retry_count: number;
+    customer_intent: string;
+  };
+  created_at: string;
+  expires_at: string;
+};
+
+export type Consultation = {
+  id: string;
+  journey_id: string;
+  context_pass_id: string;
+  status: "OPEN" | "COMPLETED";
+  outcome: string | null;
+  next_step: JourneyStep | null;
+  notes: string | null;
+  created_at: string;
+  completed_at: string | null;
+};
+
+export function getContextPass(passId: string) {
+  return request<ContextPass>(`/api/v1/journeys/context-pass/${passId}`);
+}
+
+export function createConsultation(passId: string) {
+  return request<Consultation>(`/api/v1/journeys/context-pass/${passId}/consultations`, {
+    method: "POST",
+  });
+}
+
+export function completeConsultation(
+  consultationId: string,
+  body: { outcome: string; next_step: JourneyStep; notes?: string },
+) {
+  return request<Consultation>(`/api/v1/journeys/consultations/${consultationId}/complete`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
