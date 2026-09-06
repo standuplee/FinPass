@@ -1,4 +1,4 @@
-.PHONY: api-dev api-test api-lint api-migrate rag-index web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
+.PHONY: api-dev api-test api-lint api-migrate rag-index evaluate-ai web-dev web-check db-up db-down validate-fixtures banking77 profile-data normalize-consultations normalize-financial-products normalize-bpi normalize-banking77 validate-data generate-synthetic validate-synthetic test-pipelines
 
 api-dev:
 	cd apps/api && uv run uvicorn app.main:app --reload
@@ -14,6 +14,9 @@ api-migrate:
 
 rag-index:
 	cd apps/api && uv run python -m scripts.index_rag
+
+evaluate-ai:
+	cd apps/api && PYTHONPATH=../.. uv run python -m ai.evals.evaluate
 
 web-dev:
 	pnpm dev:web
