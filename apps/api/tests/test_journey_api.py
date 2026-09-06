@@ -180,6 +180,11 @@ def test_consent_context_pass_and_consultation_lifecycle() -> None:
     )
     assert completed.status_code == 200
     assert completed.json()["status"] == "COMPLETED"
+    resumed = client.get(f"/api/v1/journeys/{journey_id}")
+    assert resumed.status_code == 200
+    assert resumed.json()["status"] == "RESUMED"
+    assert resumed.json()["current_step"] == "DOCUMENT_SUBMISSION"
+    assert resumed.json()["events"][-1]["event_type"] == "JOURNEY_RESUMED"
 
     revoked = client.post(f"/api/v1/journeys/consents/{consent_body['id']}/revoke")
     assert revoked.status_code == 200

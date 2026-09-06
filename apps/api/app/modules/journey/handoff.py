@@ -1,12 +1,21 @@
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
+from app.contracts.events import (
+    Channel,
+    EventStatus,
+    EventType,
+    JourneyEvent,
+    JourneyStep,
+    ProductType,
+)
 from app.modules.journey.models import (
     ConsentModel,
     ConsultationModel,
     ContextPassModel,
+    JourneyEventModel,
 )
 from app.modules.journey.schemas import (
     CompleteConsultationRequest,
@@ -15,7 +24,13 @@ from app.modules.journey.schemas import (
     ContextPassRead,
     CreateConsentRequest,
 )
-from app.modules.journey.service import JourneyConflictError, JourneyNotFoundError, load_journey
+from app.modules.journey.service import (
+    JourneyConflictError,
+    JourneyNotFoundError,
+    load_journey,
+    request_hash,
+)
+from app.modules.journey.state import project_journey
 
 
 def create_consent(
@@ -120,6 +135,47 @@ def complete_consultation(
     consultation.next_step = request.next_step
     consultation.notes = request.notes
     consultation.completed_at = datetime.now(UTC)
+    journey = load_journey(session, consultation.journey_id)
+    resume_event = JourneyEvent(
+        event_id=uuid4(),
+        customer_id=journey.customer_id,
+        journey_id=journey.id,
+        session_id=uuid4(),
+        channel=Channel.CALL_CENTER,
+        event_type=EventType.JOURNEY_RESUMED,
+        product_type=ProductType.SOLE_PROPRIETOR_LOAN,
+        journey_step=JourneyStep(request.next_step),
+        status=EventStatus.COMPLETED,
+        retry_count=0,
+        occurred_at=consultation.completed_at,
+        attributes={"consultation_id": str(consultation.id)},
+    )
+    stored_event = JourneyEventModel(
+        id=resume_event.event_id,
+        schema_version=resume_event.schema_version,
+        customer_id=resume_event.customer_id,
+        journey_id=resume_event.journey_id,
+        session_id=resume_event.session_id,
+        channel=resume_event.channel.value,
+        event_type=resume_event.event_type.value,
+        product_type=resume_event.product_type.value,
+        journey_step=resume_event.journey_step.value,
+        status=resume_event.status.value,
+        retry_count=resume_event.retry_count,
+        occurred_at=resume_event.occurred_at,
+        attributes=resume_event.attributes,
+        request_hash=request_hash(resume_event),
+    )
+    session.add(stored_event)
+    projection = project_journey(
+        [
+            JourneyEvent.model_validate(event, from_attributes=True)
+            for event in journey.events
+        ]
+        + [resume_event]
+    )
+    journey.status = projection.status.value
+    journey.current_step = projection.current_step.value
     session.commit()
     session.refresh(consultation)
     return ConsultationRead.model_validate(consultation, from_attributes=True)
