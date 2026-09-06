@@ -6,7 +6,24 @@ from sqlalchemy.orm import Session
 
 from app.contracts.events import JourneyEvent
 from app.infrastructure.database import get_session
-from app.modules.journey.schemas import CreateJourneyRequest, EventWriteResult, JourneyRead
+from app.modules.journey.handoff import (
+    complete_consultation,
+    create_consent,
+    create_consultation,
+    create_context_pass,
+    get_context_pass,
+    revoke_consent,
+)
+from app.modules.journey.schemas import (
+    CompleteConsultationRequest,
+    ConsentRead,
+    ConsultationRead,
+    ContextPassRead,
+    CreateConsentRequest,
+    CreateJourneyRequest,
+    EventWriteResult,
+    JourneyRead,
+)
 from app.modules.journey.service import (
     JourneyConflictError,
     JourneyNotFoundError,
@@ -52,6 +69,70 @@ def post_journey_event(
 ) -> EventWriteResult:
     try:
         return append_event(session, journey_id, event, idempotency_key)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+    except JourneyConflictError as error:
+        raise conflict(error) from error
+
+
+@router.post("/{journey_id}/consents", response_model=ConsentRead, status_code=201)
+def post_consent(
+    journey_id: UUID, request: CreateConsentRequest, session: DatabaseSession
+) -> ConsentRead:
+    try:
+        return create_consent(session, journey_id, request)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+
+
+@router.post("/{journey_id}/context-pass", response_model=ContextPassRead, status_code=201)
+def post_context_pass(
+    journey_id: UUID, consent_id: UUID, session: DatabaseSession
+) -> ContextPassRead:
+    try:
+        return create_context_pass(session, journey_id, consent_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+    except JourneyConflictError as error:
+        raise conflict(error) from error
+
+
+@router.get("/context-pass/{pass_id}", response_model=ContextPassRead)
+def read_context_pass(pass_id: UUID, session: DatabaseSession) -> ContextPassRead:
+    try:
+        return get_context_pass(session, pass_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+    except JourneyConflictError as error:
+        raise conflict(error) from error
+
+
+@router.post("/consents/{consent_id}/revoke", response_model=ConsentRead)
+def post_revoke_consent(consent_id: UUID, session: DatabaseSession) -> ConsentRead:
+    try:
+        return revoke_consent(session, consent_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+
+
+@router.post(
+    "/context-pass/{pass_id}/consultations", response_model=ConsultationRead, status_code=201
+)
+def post_consultation(pass_id: UUID, session: DatabaseSession) -> ConsultationRead:
+    try:
+        return create_consultation(session, pass_id)
+    except JourneyNotFoundError as error:
+        raise not_found(error) from error
+    except JourneyConflictError as error:
+        raise conflict(error) from error
+
+
+@router.post("/consultations/{consultation_id}/complete", response_model=ConsultationRead)
+def post_complete_consultation(
+    consultation_id: UUID, request: CompleteConsultationRequest, session: DatabaseSession
+) -> ConsultationRead:
+    try:
+        return complete_consultation(session, consultation_id, request)
     except JourneyNotFoundError as error:
         raise not_found(error) from error
     except JourneyConflictError as error:

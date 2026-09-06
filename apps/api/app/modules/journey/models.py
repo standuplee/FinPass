@@ -95,3 +95,41 @@ class IdempotencyRecordModel(Base):
     request_hash: Mapped[str] = mapped_column(String(64))
     event_id: Mapped[UUID] = mapped_column(ForeignKey("journey_events.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class ConsentModel(Base):
+    __tablename__ = "consents"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    journey_id: Mapped[UUID] = mapped_column(ForeignKey("journeys.id"), index=True)
+    customer_id: Mapped[UUID] = mapped_column(ForeignKey("customers.id"), index=True)
+    scope: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ContextPassModel(Base):
+    __tablename__ = "context_passes"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    journey_id: Mapped[UUID] = mapped_column(ForeignKey("journeys.id"), index=True)
+    consent_id: Mapped[UUID] = mapped_column(ForeignKey("consents.id"))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ConsultationModel(Base):
+    __tablename__ = "consultations"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    journey_id: Mapped[UUID] = mapped_column(ForeignKey("journeys.id"), index=True)
+    context_pass_id: Mapped[UUID | None] = mapped_column(ForeignKey("context_passes.id"))
+    status: Mapped[str] = mapped_column(String(20), default="OPEN")
+    outcome: Mapped[str | None] = mapped_column(String(200))
+    next_step: Mapped[str | None] = mapped_column(String(40))
+    notes: Mapped[str | None] = mapped_column(String(4000))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

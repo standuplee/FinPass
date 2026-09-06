@@ -137,3 +137,50 @@ def test_event_rejects_body_journey_mismatch_and_naive_timestamp() -> None:
     payload["journey_id"] = journey["id"]
     payload["occurred_at"] = "2026-09-06T00:00:00"
     assert client.post(endpoint, json=payload).status_code == 422
+
+
+def test_consent_context_pass_and_consultation_lifecycle() -> None:
+    journey = client.post("/api/v1/journeys", json={}).json()
+    journey_id = journey["id"]
+
+    denied = client.post(
+        f"/api/v1/journeys/{journey_id}/context-pass",
+        params={"consent_id": str(uuid4())},
+    )
+    assert denied.status_code == 409
+
+    consent = client.post(
+        f"/api/v1/journeys/{journey_id}/consents",
+        json={"scope": ["JOURNEY_CONTEXT", "FAILURE_EVIDENCE"], "ttl_minutes": 30},
+    )
+    assert consent.status_code == 201
+    consent_body = consent.json()
+
+    context = client.post(
+        f"/api/v1/journeys/{journey_id}/context-pass",
+        params={"consent_id": consent_body["id"]},
+    )
+    assert context.status_code == 201
+    context_body = context.json()
+    assert context_body["payload"]["current_step"] == "PRODUCT_SELECTION"
+
+    consultation = client.post(
+        f"/api/v1/journeys/context-pass/{context_body['id']}/consultations"
+    )
+    assert consultation.status_code == 201
+    consultation_id = consultation.json()["id"]
+
+    completed = client.post(
+        f"/api/v1/journeys/consultations/{consultation_id}/complete",
+        json={
+            "outcome": "대체 소득증빙 안내",
+            "next_step": "DOCUMENT_SUBMISSION",
+            "notes": "소득금액증명원 제출 요청",
+        },
+    )
+    assert completed.status_code == 200
+    assert completed.json()["status"] == "COMPLETED"
+
+    revoked = client.post(f"/api/v1/journeys/consents/{consent_body['id']}/revoke")
+    assert revoked.status_code == 200
+    assert revoked.json()["status"] == "REVOKED"
